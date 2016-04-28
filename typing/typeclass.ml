@@ -21,6 +21,18 @@ open Typecore
 open Typetexp
 open Format
 
+type 'a class_info = {
+  name : Ident.t;
+  id_loc : string loc;
+  cl_ty : class_declaration;
+  ty_id : Ident.t; cl_ty_def : class_type_declaration;
+  obj_id : Ident.t; obj_abbr : type_declaration;
+  cl_id : Ident.t; cl_abbr : type_declaration;
+  arity : int;
+  pub_methods : string list;
+  cl_info : 'a;
+}
+
 type error =
     Unconsistent_constraint of (type_expr * type_expr) list
   | Field_type_mismatch of string * string * (type_expr * type_expr) list
@@ -1589,12 +1601,12 @@ let check_coercions env
       if not (Ctype.opened_object cl_ty) then
         raise(Error(loc, env, Cannot_coerce_self obj_ty))
   end;
-  (id, id_loc, clty, ty_id, cltydef, obj_id, obj_abbr, cl_id, cl_abbr,
-   arity, pub_meths, req)
+  {name=id; id_loc; cl_ty = clty; ty_id; cl_ty_def=cltydef; obj_id; obj_abbr; cl_id; cl_abbr;
+   arity; pub_methods=pub_meths; cl_info=req}
 
 (*******************************)
 
-let type_classes define_class approx kind env cls =
+let type_classes define_class approx kind env cls : 'a class_info list * Env.t =
   let cls =
     List.map
       (function cl ->
@@ -1637,15 +1649,14 @@ let class_descriptions env cls =
   type_classes true approx_description class_description env cls
 
 let class_type_declarations env cls =
-  let (decl, env) =
+  let (decls, env) =
     type_classes false approx_description class_description env cls
   in
   (List.map
-     (function
-       (_, id_loc, _, ty_id, cltydef, obj_id, obj_abbr, cl_id, cl_abbr,
-        _, _, ci) ->
-       (ty_id, id_loc, cltydef, obj_id, obj_abbr, cl_id, cl_abbr, ci))
-     decl,
+     (fun decl ->
+        (decl.ty_id, decl.id_loc, decl.cl_ty_def,
+         decl.obj_id, decl.obj_abbr, decl.cl_id, decl.cl_abbr, decl.cl_info))
+     decls,
    env)
 
 let rec unify_parents env ty cl =

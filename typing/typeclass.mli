@@ -17,13 +17,21 @@ open Asttypes
 open Types
 open Format
 
+type 'a class_info = {
+  name : Ident.t;
+  id_loc : string loc;
+  cl_ty : class_declaration;
+  ty_id : Ident.t; cl_ty_def : class_type_declaration;
+  obj_id : Ident.t; obj_abbr : type_declaration;
+  cl_id : Ident.t; cl_abbr : type_declaration;
+  arity : int;
+  pub_methods : string list;
+  cl_info : 'a;
+}
+
 val class_declarations:
   Env.t -> Parsetree.class_declaration list ->
-  (Ident.t * string loc * class_declaration *
-   Ident.t * class_type_declaration *
-   Ident.t * type_declaration *
-   Ident.t * type_declaration *
-   int * string list * Typedtree.class_declaration) list * Env.t
+  Typedtree.class_declaration class_info list * Env.t
 
 (*
 and class_declaration =
@@ -32,11 +40,7 @@ and class_declaration =
 
 val class_descriptions:
   Env.t -> Parsetree.class_description list ->
-  (Ident.t * string loc * class_declaration *
-   Ident.t * class_type_declaration *
-   Ident.t * type_declaration *
-   Ident.t * type_declaration *
-   int * string list * Typedtree.class_description) list * Env.t
+  Typedtree.class_description class_info list * Env.t
 
 (*
 and class_description =
